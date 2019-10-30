@@ -347,8 +347,10 @@ class ScriptParser:
                 CurDialCharNet = np.zeros((CharNum,CharNum))
                 for i in range(CharNum): 
                     if i in OccurrenceChars[l]:
+                        CurCharNet[i,i] += OccurrenceChars[l][i]
+                        CurDialCharNet[i,i] += NumWordsChars[l][i]
                         for j in range(CharNum): 
-                            if j in OccurrenceChars[l]:
+                            if (j in OccurrenceChars[l]) and (i != j):
                                 CurCharNet[i,j] += OccurrenceChars[l][i]
                                 CurDialCharNet[i,j] += NumWordsChars[l][i]
                 CharNet = CharNet + CurCharNet
@@ -378,8 +380,8 @@ class ScriptParser:
                             BiCurCharNet[i,j] = CharNets[l][i,j] + CharNets[l][j,i]
                             BiCurDialCharNet[i,j] = DialCharNets[l][i,j] + DialCharNets[l][j,i]
 
-                            SumNumDial = SumNumDial + BiCurCharNet[i,j]
-                            SumNumWords = SumNumWords + BiCurDialCharNet[i,j]
+                        SumNumDial = SumNumDial + BiCurCharNet[j,i]
+                        SumNumWords = SumNumWords + BiCurDialCharNet[j,i]
                         #else:
                             #BiCurCharNet[i,j] = CharNets[l][i,j]
                             #BiCurDialCharNet[i,j] = DialCharNets[l][i,j]
