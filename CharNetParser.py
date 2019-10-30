@@ -363,11 +363,20 @@ class ScriptParser:
             
             root = etree.Element("characterNetwork")
             characterList = etree.SubElement(root, "characterList")
+            ErrorCharacterList = etree.SubElement(root, "EcharacterList")
 
             charList = ''
             for char in CharDic:
                 charList = charList + str(char) + ': ' + str(CharDic[char]) + '  '
             characterList.text = charList
+
+            EcharList = ''
+            for char in CharDic:
+                if char == 'ALL':
+                    EcharList = EcharList + str(CharDic[char]) + '  '
+                elif '/' in char:
+                    EcharList = EcharList + str(CharDic[char]) + '  '
+            ErrorCharacterList.text = EcharList
 
             
             for l in range(SceneNum): 
