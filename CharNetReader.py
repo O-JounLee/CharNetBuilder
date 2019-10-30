@@ -303,7 +303,7 @@ class CharNetReader:
                     ImportanceInScene[j] = 0
             Importance.append(ImportanceInScene)
 
-        #importance
+        #Length
         Length = []
 
         for i in range(self.NumOfScenes):
@@ -319,7 +319,18 @@ class CharNetReader:
         
         LengthForScene = []
         for i in range(self.NumOfScenes):
-            LengthForScene.append(np.average(np.asarray(Length[i])))
+            #LengthForScene.append(np.average(np.asarray(Length[i])))
+            sumLength = 0
+            numChar = 0
+            for j in range(self.NumOfChar):
+                if float(BiDisCharNetStr[i].item(j,j)) != 0:
+                    sumLength += Length[i][j]
+                    numChar += 1
+            if numChar != 0:
+                LengthForScene.append(sumLength/numChar)
+            else:
+                LengthForScene.append(0)
+
         MaxLength = max(np.asarray(LengthForScene))
         for i in range(self.NumOfScenes):
             LengthForScene[i] = LengthForScene[i]/MaxLength
@@ -344,7 +355,7 @@ class CharNetReader:
             logRsum = 0
             numChar = 0
             for j in range(self.NumOfChar):
-                if Ratios[i][j] != 0:
+                if float(BiDisCharNetStr[i].item(j,j)) != 0:
                     logRsum -= math.log(Ratios[i][j])
                     numChar += 1
             if numChar != 0:
@@ -361,30 +372,86 @@ class CharNetReader:
         #########################################
         SceneID = []
         ProImportance = []
+        MentorImportance = []
+        MentorLength = []
+        MentorRatio = []
         ProLength = []
         ProRatio = []
         for i in range(self.NumOfScenes):
             SceneID.append(i + 1)
+            MentorImportance.append(Importance[i][6])
             ProImportance.append(Importance[i][2])
+            MentorLength.append(Length[i][6])
             ProLength.append(Length[i][2])
+            MentorRatio.append(Ratios[i][6])
             ProRatio.append(Ratios[i][2])
 
-        print(RatioForScene)
+        #print(RatioForScene)
 
         ProMaxLength = max(np.asarray(ProLength))
         for i in range(self.NumOfScenes):
             ProLength[i] = ProLength[i]/ProMaxLength
 
-        plt.plot(SceneID,ProImportance,color='green',marker='o',linestyle='solid')
-        plt.plot(SceneID,ProLength,color='red',marker='o',linestyle='solid')
-        plt.plot(SceneID,LengthForScene,color='blue',marker='o',linestyle='solid')
-        plt.plot(SceneID,ProRatio,color='gray',marker='o',linestyle='solid')
-        plt.plot(SceneID,RatioForScene,color='black',marker='o',linestyle='solid')
+        MentorMaxLength = max(np.asarray(MentorLength))
+        for i in range(self.NumOfScenes):
+            MentorLength[i] = MentorLength[i]/MentorMaxLength
+
+
+
+
+        f = open("C:/Users/OJ/Documents/2Imp.dat", mode='wt', encoding='utf-8')
+        for i in range(self.NumOfScenes):
+            f.write(str(i+1) + '    ' + str(ProImportance[i]) + '\n')
+        f.close
+
+        f = open("C:/Users/OJ/Documents/6Imp.dat", mode='wt', encoding='utf-8')
+        for i in range(self.NumOfScenes):
+            f.write(str(i+1) + '    ' + str(MentorImportance[i]) + '\n')
+        f.close
+
+        f = open("C:/Users/OJ/Documents/SLen.dat", mode='wt', encoding='utf-8')
+        for i in range(self.NumOfScenes):
+            f.write(str(i+1) + '    ' + str(LengthForScene[i]) + '\n')
+        f.close
+
+        f = open("C:/Users/OJ/Documents/2Len.dat", mode='wt', encoding='utf-8')
+        for i in range(self.NumOfScenes):
+            f.write(str(i+1) + '    ' + str(ProLength[i]) + '\n')
+        f.close
+
+        f = open("C:/Users/OJ/Documents/6Len.dat", mode='wt', encoding='utf-8')
+        for i in range(self.NumOfScenes):
+            f.write(str(i+1) + '    ' + str(MentorLength[i]) + '\n')
+        f.close
+
+        f = open("C:/Users/OJ/Documents/SRot.dat", mode='wt', encoding='utf-8')
+        for i in range(self.NumOfScenes):
+            f.write(str(i+1) + '    ' + str(RatioForScene[i]) + '\n')
+        f.close
+
+        f = open("C:/Users/OJ/Documents/2Rot.dat", mode='wt', encoding='utf-8')
+        for i in range(self.NumOfScenes):
+            f.write(str(i+1) + '    ' + str(ProRatio[i]) + '\n')
+        f.close
+
+        f = open("C:/Users/OJ/Documents/6Rot.dat", mode='wt', encoding='utf-8')
+        for i in range(self.NumOfScenes):
+            f.write(str(i+1) + '    ' + str(MentorRatio[i]) + '\n')
+        f.close
+
+        #plt.plot(SceneID,ProImportance,color='green',marker='o',linestyle='solid')
+        #plt.plot(SceneID,MentorImportance,color='blue',marker='o',linestyle='solid')
+
+        #plt.plot(SceneID,ProLength,color='red',marker='o',linestyle='solid')
+        #plt.plot(SceneID,LengthForScene,color='blue',marker='o',linestyle='solid')
+        #plt.plot(SceneID,ProRatio,color='gray',marker='o',linestyle='solid')
+        #plt.plot(SceneID,RatioForScene,color='black',marker='o',linestyle='solid')
+
         #features = {'Scene Number': SceneID, 'Importance': ProImportance, 'Length': ProLength}
         #df = pd.DataFrame(features)
         #sns.barplot(x='Scene Number', y='Importance', data = df)
         #sns.barplot(x='Scene Number', y='Length', data = df)
-        plt.show()
+        #plt.show()
 
         #print(ProImportance)
 
