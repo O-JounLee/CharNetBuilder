@@ -121,9 +121,9 @@ class ScriptParser:
                 NormDes = []
                 for d in des:
                     if Dgaps[i] > averageGap:
-                        NormDes.append([d, float(Dgaps[i]), 1, len(d.strip().split(' '))])
+                        NormDes.append([d, float(Dgaps[i]), 1, len(d.strip().split(' '))]) #dialogues
                     else:
-                        NormDes.append([d, float(Dgaps[i]), 0, len(d.strip().split(' '))])
+                        NormDes.append([d, float(Dgaps[i]), 0, len(d.strip().split(' '))]) #descriptions
                     i = i + 1
                 NormDescription.append(NormDes)
 
@@ -135,7 +135,7 @@ class ScriptParser:
                         NumWords = NumWords + d[3]
                 DialLength.append(NumWords)
 
-            print(DialLength)
+            #print(DialLength)
             ###########################
 
             gaps = []
@@ -166,7 +166,7 @@ class ScriptParser:
             
             
 
-            print(NormScript)
+            #print(NormScript)
 
 
             ########################################
@@ -180,7 +180,7 @@ class ScriptParser:
                 matches = re.findall(condition, NormScript[i][0])
                 NormScript[i][0] = " ".join([x for x in matches if "(" not in x])
                 if NormScript[i][2] == 1:
-                    NormScript[i][0] = re.sub('[^A-Za-z0-9]+', '', NormScript[i][0])
+                    NormScript[i][0] = re.sub('[^A-Za-z0-9/]+', '', NormScript[i][0])
                 
                 
             for entity in NormScript:
@@ -246,13 +246,12 @@ class ScriptParser:
                     
             #print(SceneNum)
             #print(CharNum)
-            #print(CharDic)
+            print(CharDic)
             #print(path[0])
             #print(NormScript)
             
             
-            AcCharNets = []
-            CharNets = []
+            
             ALLCOUNT = 0
             SceneID = 0
             OccurrenceChars = []
@@ -282,6 +281,11 @@ class ScriptParser:
                     if NormScript[i][0].strip() == 'ALL':
                         ALLCOUNT = ALLCOUNT + 1
                         ALLNUmWords = ALLNUmWords + NormScript[i][3]
+                    elif '/' in NormScript[i][0].strip():
+                        CharList = NormScript[i][0].strip().split('/')
+                        for char in CharList:
+                            OccurrenceInScene[CharDic[char]] += 1
+                            NumWordsInScene[CharDic[char]] += NormScript[i][3]
                     elif CharDic[NormScript[i][0].strip()] in OccurrenceInScene: 
                         OccurrenceInScene[CharDic[NormScript[i][0].strip()]] += 1
                         NumWordsInScene[CharDic[NormScript[i][0].strip()]] += NormScript[i][3]
@@ -311,8 +315,9 @@ class ScriptParser:
             """
 
             CharNet = np.zeros((CharNum,CharNum))
-            NormSceneNum = SceneNum
-            emptyScenes = []
+            DialCharNet = np.zeros((CharNum,CharNum))
+            #NormSceneNum = SceneNum
+            #emptyScenes = []
             
             """
             for l in range(SceneNum): 
@@ -330,22 +335,40 @@ class ScriptParser:
                 self.ScriptPaths.remove(path)
                 continue
             
+            AcCharNets = []
+            CharNets = []
+            AcDialCharNets = []
+            DialCharNets = []
+
             for l in range(SceneNum): 
                 CurCharNet = np.zeros((CharNum,CharNum))
+                CurDialCharNet = np.zeros((CharNum,CharNum))
                 for i in range(CharNum): 
                     if i in OccurrenceChars[l]:
                         for j in range(CharNum): 
                             if j in OccurrenceChars[l]:
                                 CurCharNet[i,j] += OccurrenceChars[l][i]
+                                CurDialCharNet[i,j] += NumWordsChars[l][i]
                 CharNet = CharNet + CurCharNet
+                DialCharNet = DialCharNet + CurDialCharNet
                 AcCharNets.append(CharNet)
                 CharNets.append(CurCharNet)
+                AcDialCharNets.append(DialCharNet)
+                DialCharNets.append(CurDialCharNet)
                 
                 
-            #print(CharNets)
+            #print(AcCharNets)
+            #print(AcDialCharNets)
             #print(SceneNum)
             
             root = etree.Element("characterNetwork")
+            characterList = etree.SubElement(root, "characterList")
+
+            charList = ''
+            for char in CharDic:
+                charList = charList + str(char) + ': ' + str(CharDic[char]) + '  '
+            characterList.text = charList
+
             
             for l in range(SceneNum): 
                 characterNet = etree.SubElement(root, "characterNet")
@@ -353,6 +376,8 @@ class ScriptParser:
                 sceneNumber.text = str(l + 1)
                 AccuCharNet = etree.SubElement(characterNet, "accumulativeCharNet")
                 DisCharNet = etree.SubElement(characterNet, "discreteCharNet")
+                AccuDialCharNet = etree.SubElement(characterNet, "accumulativeDialCharNet")
+                DisDialCharNet = etree.SubElement(characterNet, "discreteDialCharNet")
                 
                 AcCN = ''
                 for i in range(CharNum): 
@@ -367,11 +392,27 @@ class ScriptParser:
                         DsCN = DsCN + str(int(CharNets[l][i,j])) + '  '
                     DsCN = DsCN + '//'
                 DisCharNet.text = DsCN
+
+                AcDCN = ''
+                for i in range(CharNum): 
+                    for j in range(CharNum): 
+                        AcDCN = AcDCN + str(int(AcDialCharNets[l][i,j])) + '  '
+                    AcDCN = AcDCN + '//'
+                AccuDialCharNet.text = AcDCN
+
+                DsDCN = ''
+                for i in range(CharNum): 
+                    for j in range(CharNum): 
+                        DsDCN = DsDCN + str(int(DialCharNets[l][i,j])) + '  '
+                    DsDCN = DsDCN + '//'
+                DisDialCharNet.text = DsDCN
                 
                 root.append(characterNet)
                 characterNet.append(sceneNumber)
                 characterNet.append(AccuCharNet)
                 characterNet.append(DisCharNet)
+                characterNet.append(AccuDialCharNet)
+                characterNet.append(DisDialCharNet)
                 #print('\n\n\n',AcCN)
             
             #etree.write('./XML/' + path[0] + '_sample.xml')
