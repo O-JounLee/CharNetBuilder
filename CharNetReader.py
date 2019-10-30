@@ -6,6 +6,10 @@ import networkx as nx
 import math
 import matplotlib.pyplot as plt
 import operator
+import seaborn as sns
+import pandas as pd
+import numpy as np
+import math
 from xml.etree.ElementTree import parse
 import os
 
@@ -57,7 +61,9 @@ class CharNetReader:
         self.DisCharNetGraphs = []
 
         self.CharNet2Graph(self.CharNetStr, self.NumOfScenes, self.NumOfChar)
-        self.discretizeCharNet()
+        #self.discretizeCharNet()
+
+        self.calcFeatures()
     
     #moved to corpus manager
     """
@@ -151,7 +157,7 @@ class CharNetReader:
 
 
             ######################################################
-            BiAcCharNet = CharNetSet.findtext("accumulativeCharNet")
+            BiAcCharNet = CharNetSet.findtext("BiaccumulativeCharNet")
             BiAcCharNet = BiAcCharNet.split('  //')
             for CharNum in range(len(BiAcCharNet)):
                 BiAcCharNet[CharNum] = BiAcCharNet[CharNum].split('  ')
@@ -162,7 +168,7 @@ class CharNetReader:
             BiAcCharNetStream.insert(Scene-1, BiAcCharNet)
             
             ######################################################
-            BiDisCharNet = CharNetSet.findtext("discreteCharNet")
+            BiDisCharNet = CharNetSet.findtext("BidiscreteCharNet")
             BiDisCharNet = BiDisCharNet.split('  //')
             for CharNum in range(len(BiDisCharNet)):
                 BiDisCharNet[CharNum] = BiDisCharNet[CharNum].split('  ')
@@ -174,7 +180,7 @@ class CharNetReader:
             
 
             ######################################################
-            BiAcDialCharNet = CharNetSet.findtext("accumulativeDialCharNet")
+            BiAcDialCharNet = CharNetSet.findtext("BiaccumulativeDialCharNet")
             BiAcDialCharNet = BiAcDialCharNet.split('  //')
             for CharNum in range(len(BiAcDialCharNet)):
                 BiAcDialCharNet[CharNum] = BiAcDialCharNet[CharNum].split('  ')
@@ -185,7 +191,7 @@ class CharNetReader:
             BiAcDialCharNetStream.insert(Scene-1, BiAcDialCharNet)
             
             ######################################################
-            BiDisDialCharNet = CharNetSet.findtext("discreteDialCharNet")
+            BiDisDialCharNet = CharNetSet.findtext("BidiscreteDialCharNet")
             BiDisDialCharNet = BiDisDialCharNet.split('  //')
             for CharNum in range(len(BiDisDialCharNet)):
                 BiDisDialCharNet[CharNum] = BiDisDialCharNet[CharNum].split('  ')
@@ -234,9 +240,9 @@ class CharNetReader:
         #print(len(CharNetStream))
         #print(CharNetStream[NumOfScenes-2])
 
-        print(NumOfChar)
-        print(len(self.CharNames))
-        print(self.CharNames)
+        #print(NumOfChar)
+        #print(len(self.CharNames))
+        #print(self.CharNames)
         
         AcCharNetStream = CharNetStreams[0]
 
@@ -268,16 +274,129 @@ class CharNetReader:
                             #self.centrality['c'+ str(j)] = (centrality['weighted_deg']['c'+ str(j)] + centrality['closeness_cent']['c'+ str(j)] + centrality['betweeness_cent']['c'+ str(j)])
                             self.centrality[self.CharNames[j]] = (centrality['weighted_deg'][self.CharNames[j]] + centrality['closeness_cent'][self.CharNames[j]] + centrality['betweeness_cent'][self.CharNames[j]])
 
-        nx.draw(self.AcCharNetGraphs[len(self.AcCharNetGraphs)-1])
-        plt.show()
+        #nx.draw(self.AcCharNetGraphs[len(self.AcCharNetGraphs)-1], with_labels = True)
+        #plt.show()
         nx.write_graphml(self.AcCharNetGraphs[len(self.AcCharNetGraphs)-1], "C:/Users/OJ/Documents/XML/GOOD WILL HUNTING_sample_AcCharNet_Last.graphml")
 
         return #CharNetGraphs
 
+    def calcFeatures(self):
+
+        DisCharNetStr = self.CharNetStr[1]
+        DisDialCharNetStr = self.CharNetStr[3]
+        BiDisCharNetStr = self.CharNetStr[5]
+
+        #importance
+        Importance = []
+
+        for i in range(self.NumOfScenes):
+            ImportanceInScene = []
+            MaxFreq = 0
+            for j in range(self.NumOfChar):
+                ImportanceInScene.append(int(DisCharNetStr[i].item(j,j)))
+                if MaxFreq < int(DisCharNetStr[i].item(j,j)): 
+                    MaxFreq = int(DisCharNetStr[i].item(j,j))
+            for j in range(self.NumOfChar):
+                if MaxFreq != 0:
+                    ImportanceInScene[j] = ImportanceInScene[j]/MaxFreq
+                else:
+                    ImportanceInScene[j] = 0
+            Importance.append(ImportanceInScene)
+
+        #importance
+        Length = []
+
+        for i in range(self.NumOfScenes):
+            LengthInScene = []
+            MaxFreq = 0
+            for j in range(self.NumOfChar):
+                if float(DisCharNetStr[i].item(j,j)) != 0:
+                    LengthInScene.append(float(DisDialCharNetStr[i].item(j,j))/float(DisCharNetStr[i].item(j,j)))
+                else:
+                    LengthInScene.append(0)
+            Length.append(LengthInScene)
+
+        
+        LengthForScene = []
+        for i in range(self.NumOfScenes):
+            LengthForScene.append(np.average(np.asarray(Length[i])))
+        MaxLength = max(np.asarray(LengthForScene))
+        for i in range(self.NumOfScenes):
+            LengthForScene[i] = LengthForScene[i]/MaxLength
+        
+
+        #Ratios
+        Ratios = []
+
+        for i in range(self.NumOfScenes):
+            RatioInScene = []
+            MaxFreq = 0
+            for j in range(self.NumOfChar):
+                if float(BiDisCharNetStr[i].item(j,j)) != 0:
+                    RatioInScene.append(float(DisCharNetStr[i].item(j,j))/float(BiDisCharNetStr[i].item(j,j)))
+                else:
+                    RatioInScene.append(0)
+            Ratios.append(RatioInScene)
+
+        
+        RatioForScene = []
+        for i in range(self.NumOfScenes):
+            logRsum = 0
+            numChar = 0
+            for j in range(self.NumOfChar):
+                if Ratios[i][j] != 0:
+                    logRsum -= math.log(Ratios[i][j])
+                    numChar += 1
+            if numChar != 0:
+                logAver = logRsum/numChar
+                RatioForScene.append(1/(logAver+1))
+            else:
+                #logAver = 0
+                RatioForScene.append(0)
+            #RatioForScene.append(np.average(np.asarray(Ratios[i])))
+        #MaxLength = max(np.asarray(LengthForScene))
+        #for i in range(self.NumOfScenes):
+            #LengthForScene[i] = LengthForScene[i]/MaxLength
+
+        #########################################
+        SceneID = []
+        ProImportance = []
+        ProLength = []
+        ProRatio = []
+        for i in range(self.NumOfScenes):
+            SceneID.append(i + 1)
+            ProImportance.append(Importance[i][2])
+            ProLength.append(Length[i][2])
+            ProRatio.append(Ratios[i][2])
+
+        print(RatioForScene)
+
+        ProMaxLength = max(np.asarray(ProLength))
+        for i in range(self.NumOfScenes):
+            ProLength[i] = ProLength[i]/ProMaxLength
+
+        plt.plot(SceneID,ProImportance,color='green',marker='o',linestyle='solid')
+        plt.plot(SceneID,ProLength,color='red',marker='o',linestyle='solid')
+        plt.plot(SceneID,LengthForScene,color='blue',marker='o',linestyle='solid')
+        plt.plot(SceneID,ProRatio,color='gray',marker='o',linestyle='solid')
+        plt.plot(SceneID,RatioForScene,color='black',marker='o',linestyle='solid')
+        #features = {'Scene Number': SceneID, 'Importance': ProImportance, 'Length': ProLength}
+        #df = pd.DataFrame(features)
+        #sns.barplot(x='Scene Number', y='Importance', data = df)
+        #sns.barplot(x='Scene Number', y='Length', data = df)
+        plt.show()
+
+        #print(ProImportance)
+
+        return
+
+    """
     def discretizeCharNet(self):
         gap = []
         rank = sorted(self.centrality.items(), key=operator.itemgetter(1), reverse=True)
         
+        print(len(rank)) 
+        print(self.NumOfChar)
         for i in range(self.NumOfChar-1):
             gap.insert(i,(rank[i][0], rank[i+1][0], rank[i][1] - rank[i+1][1]))
             
@@ -365,6 +484,8 @@ class CharNetReader:
             #print(i)
         
         return
+"""
+
 
 
 def centralities_as_dict(input_g):
