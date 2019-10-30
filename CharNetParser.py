@@ -244,11 +244,11 @@ class ScriptParser:
                 #else:
                     #print('instruction \n', entity[0]) 
                     
-            print(SceneNum)
-            print(CharNum)
-            print(CharDic)
-            print(path[0])
-            print(NormScript)
+            #print(SceneNum)
+            #print(CharNum)
+            #print(CharDic)
+            #print(path[0])
+            #print(NormScript)
             
             
             AcCharNets = []
@@ -256,35 +256,49 @@ class ScriptParser:
             ALLCOUNT = 0
             SceneID = 0
             OccurrenceChars = []
+            NumWordsChars = []
             for i in range(len(NormScript)):
                 if NormScript[i][2] == 0:
                     if SceneID == 0:
                         #OccurrenceChars.append(OccurrenceInScene)
                         OccurrenceInScene = {}
+                        NumWordsInScene = {}
                         ALLCOUNT = 0
+                        ALLNUmWords = 0
                     else: 
                         for Char in OccurrenceInScene:
                             if OccurrenceInScene[Char] > 0:
                                 OccurrenceInScene[Char] = OccurrenceInScene[Char] + ALLCOUNT
+                                NumWordsInScene[Char] = NumWordsInScene[Char] + ALLNUmWords
                         OccurrenceChars.append(OccurrenceInScene)
-                        ALLCOUNT = 0
+                        NumWordsChars.append(NumWordsInScene)
                         OccurrenceInScene = {}
+                        NumWordsInScene = {}
+                        ALLCOUNT = 0
+                        ALLNUmWords = 0
                     SceneID = SceneID + 1
 
                 elif NormScript[i][2] == 1: 
                     if NormScript[i][0].strip() == 'ALL':
-                        ALLCOUNT = ALLCOUNT = 0 + 1
+                        ALLCOUNT = ALLCOUNT + 1
+                        ALLNUmWords = ALLNUmWords + NormScript[i][3]
                     elif CharDic[NormScript[i][0].strip()] in OccurrenceInScene: 
                         OccurrenceInScene[CharDic[NormScript[i][0].strip()]] += 1
+                        NumWordsInScene[CharDic[NormScript[i][0].strip()]] += NormScript[i][3]
                     else:
                         OccurrenceInScene[CharDic[NormScript[i][0].strip()]] = 1
+                        NumWordsInScene[CharDic[NormScript[i][0].strip()]] = NormScript[i][3]
                 if (i == len(NormScript) - 1):
                     OccurrenceChars.append(OccurrenceInScene)
+                    NumWordsChars.append(NumWordsInScene)
                 #elif NormScript[i][2] == 0:
                     #OccurrenceChars.append(OccurrenceInScene)
             
             print(len(OccurrenceChars))
             print(OccurrenceChars)
+
+            print(len(NumWordsChars))
+            print(NumWordsChars)
             
             """
             if len(OccurrenceChars) != SceneNum:
