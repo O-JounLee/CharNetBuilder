@@ -367,7 +367,8 @@ class ScriptParser:
 
             charList = ''
             for char in CharDic:
-                charList = charList + str(char) + ': ' + str(CharDic[char]) + '  '
+                #charList = charList + str(char) + ': ' + str(CharDic[char]) + '  '
+                charList = charList + str(char) + '  '
             characterList.text = charList
 
             EcharList = ''
