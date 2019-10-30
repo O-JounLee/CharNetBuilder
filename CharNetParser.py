@@ -314,8 +314,7 @@ class ScriptParser:
                 #break
             """
 
-            CharNet = np.zeros((CharNum,CharNum))
-            DialCharNet = np.zeros((CharNum,CharNum))
+            
             #NormSceneNum = SceneNum
             #emptyScenes = []
             
@@ -335,6 +334,9 @@ class ScriptParser:
                 self.ScriptPaths.remove(path)
                 continue
             
+            CharNet = np.zeros((CharNum,CharNum))
+            DialCharNet = np.zeros((CharNum,CharNum))
+
             AcCharNets = []
             CharNets = []
             AcDialCharNets = []
@@ -355,7 +357,42 @@ class ScriptParser:
                 CharNets.append(CurCharNet)
                 AcDialCharNets.append(DialCharNet)
                 DialCharNets.append(CurDialCharNet)
-                
+            
+
+            BiCharNet = np.zeros((CharNum,CharNum))
+            BiDialCharNet = np.zeros((CharNum,CharNum))
+
+            BiAcCharNets = []
+            BiCharNets = []
+            BiAcDialCharNets = []
+            BiDialCharNets = []
+
+            for l in range(SceneNum): 
+                BiCurCharNet = np.zeros((CharNum,CharNum))
+                BiCurDialCharNet = np.zeros((CharNum,CharNum))
+                for i in range(CharNum): 
+                    SumNumDial = 0
+                    SumNumWords = 0
+                    for j in range(CharNum): 
+                        if not i == j:
+                            BiCurCharNet[i,j] = CharNets[l][i,j] + CharNets[l][j,i]
+                            BiCurDialCharNet[i,j] = DialCharNets[l][i,j] + DialCharNets[l][j,i]
+
+                            SumNumDial = SumNumDial + BiCurCharNet[i,j]
+                            SumNumWords = SumNumWords + BiCurDialCharNet[i,j]
+                        #else:
+                            #BiCurCharNet[i,j] = CharNets[l][i,j]
+                            #BiCurDialCharNet[i,j] = DialCharNets[l][i,j]
+                    BiCurCharNet[i,i] = SumNumDial
+                    BiCurDialCharNet[i,i] = SumNumWords
+
+                BiCharNet = BiCharNet + BiCurCharNet
+                BiDialCharNet = BiDialCharNet + BiCurDialCharNet
+                BiAcCharNets.append(BiCharNet)
+                BiCharNets.append(BiCurCharNet)
+                BiAcDialCharNets.append(BiDialCharNet)
+                BiDialCharNets.append(BiCurDialCharNet)
+
                 
             #print(AcCharNets)
             #print(AcDialCharNets)
@@ -384,10 +421,16 @@ class ScriptParser:
                 characterNet = etree.SubElement(root, "characterNet")
                 sceneNumber = etree.SubElement(characterNet, "sceneNum")
                 sceneNumber.text = str(l + 1)
+                
                 AccuCharNet = etree.SubElement(characterNet, "accumulativeCharNet")
                 DisCharNet = etree.SubElement(characterNet, "discreteCharNet")
                 AccuDialCharNet = etree.SubElement(characterNet, "accumulativeDialCharNet")
                 DisDialCharNet = etree.SubElement(characterNet, "discreteDialCharNet")
+
+                BiAccuCharNet = etree.SubElement(characterNet, "BiaccumulativeCharNet")
+                BiDisCharNet = etree.SubElement(characterNet, "BidiscreteCharNet")
+                BiAccuDialCharNet = etree.SubElement(characterNet, "BiaccumulativeDialCharNet")
+                BiDisDialCharNet = etree.SubElement(characterNet, "BidiscreteDialCharNet")
                 
                 AcCN = ''
                 for i in range(CharNum): 
@@ -416,6 +459,34 @@ class ScriptParser:
                         DsDCN = DsDCN + str(int(DialCharNets[l][i,j])) + '  '
                     DsDCN = DsDCN + '//'
                 DisDialCharNet.text = DsDCN
+
+                BAcCN = ''
+                for i in range(CharNum): 
+                    for j in range(CharNum): 
+                        BAcCN = BAcCN + str(int(BiAcCharNets[l][i,j])) + '  '
+                    BAcCN = BAcCN + '//'
+                BiAccuCharNet.text = BAcCN
+
+                BDsCN = ''
+                for i in range(CharNum): 
+                    for j in range(CharNum): 
+                        BDsCN = BDsCN + str(int(BiCharNets[l][i,j])) + '  '
+                    BDsCN = BDsCN + '//'
+                BiDisCharNet.text = BDsCN
+
+                BAcDCN = ''
+                for i in range(CharNum): 
+                    for j in range(CharNum): 
+                        BAcDCN = BAcDCN + str(int(BiAcDialCharNets[l][i,j])) + '  '
+                    BAcDCN = BAcDCN + '//'
+                BiAccuDialCharNet.text = BAcDCN
+
+                BDsDCN = ''
+                for i in range(CharNum): 
+                    for j in range(CharNum): 
+                        BDsDCN = BDsDCN + str(int(BiDialCharNets[l][i,j])) + '  '
+                    BDsDCN = BDsDCN + '//'
+                BiDisDialCharNet.text = BDsDCN
                 
                 root.append(characterNet)
                 characterNet.append(sceneNumber)
@@ -423,6 +494,10 @@ class ScriptParser:
                 characterNet.append(DisCharNet)
                 characterNet.append(AccuDialCharNet)
                 characterNet.append(DisDialCharNet)
+                characterNet.append(BiAccuCharNet)
+                characterNet.append(BiDisCharNet)
+                characterNet.append(BiAccuDialCharNet)
+                characterNet.append(BiDisDialCharNet)
                 #print('\n\n\n',AcCN)
             
             #etree.write('./XML/' + path[0] + '_sample.xml')
