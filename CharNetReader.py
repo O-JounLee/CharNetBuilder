@@ -39,6 +39,9 @@ class CharNetReader:
     def __init__(self,path):
         
         self.Path = path
+
+        self.CharNames = []
+        self.errorChars = []
         
         #self.nodes = self.graph.nodes()
         self.CharNets = []
@@ -50,10 +53,9 @@ class CharNetReader:
         self.centrality = {}
         self.role = {}
         
-        self.CharNames = []
-        self.errorChars = []
+        self.AcCharNetGraphs = []
+        self.DisCharNetGraphs = []
 
-        self.CharNetGraphs = []
         self.CharNet2Graph(self.CharNetStr, self.NumOfScenes, self.NumOfChar)
         self.discretizeCharNet()
     
@@ -75,7 +77,6 @@ class CharNetReader:
         #tree = parse("C:\\Users\\O-Joun Lee\\Story2Vec\\CharNetsInXML\\Kung-Fu-Panda_characterNet.xml")
         tree = parse(self.Path)
         CharNetXML = tree.getroot()
-        CharNetStream = [numpy.array([0])]
 
         CharList = CharNetXML.findtext("characterList")
         ECharList = CharNetXML.findtext("EcharacterList")
@@ -89,59 +90,187 @@ class CharNetReader:
         #print(self.CharNames)
         #print(self.errorChars)
 
+        AcCharNetStream = [numpy.array([0])]
+        DisCharNetStream = [numpy.array([0])]
+        AcDialCharNetStream = [numpy.array([0])]
+        DisDialCharNetStream = [numpy.array([0])]
+
+        BiAcCharNetStream = [numpy.array([0])]
+        BiDisCharNetStream = [numpy.array([0])]
+        BiAcDialCharNetStream = [numpy.array([0])]
+        BiDisDialCharNetStream = [numpy.array([0])]
+
         for CharNetSet in CharNetXML.findall("characterNet"): 
             Scene = int(CharNetSet.findtext("sceneNum"))
-            CharNet = CharNetSet.findtext("accumulativeCharNet")
-            CharNet = CharNet.split('  //')
-            for CharNum in range(len(CharNet)):
-                CharNet[CharNum] = CharNet[CharNum].split('  ')
+
+            ######################################################
+            AcCharNet = CharNetSet.findtext("accumulativeCharNet")
+            AcCharNet = AcCharNet.split('  //')
+            for CharNum in range(len(AcCharNet)):
+                AcCharNet[CharNum] = AcCharNet[CharNum].split('  ')
                 
-            CharNet.pop()
+            AcCharNet.pop()
             #print(Scene)
-            CharNet = numpy.array(CharNet)
-            CharNetStream.insert(Scene-1, CharNet)
+            AcCharNet = numpy.array(AcCharNet)
+            AcCharNetStream.insert(Scene-1, AcCharNet)
             
-        CharNetStream.pop()
-        
+            ######################################################
+            DisCharNet = CharNetSet.findtext("discreteCharNet")
+            DisCharNet = DisCharNet.split('  //')
+            for CharNum in range(len(DisCharNet)):
+                DisCharNet[CharNum] = DisCharNet[CharNum].split('  ')
+                
+            DisCharNet.pop()
+            #print(Scene)
+            DisCharNet = numpy.array(DisCharNet)
+            DisCharNetStream.insert(Scene-1, DisCharNet)
+            
+
+            ######################################################
+            AcDialCharNet = CharNetSet.findtext("accumulativeDialCharNet")
+            AcDialCharNet = AcDialCharNet.split('  //')
+            for CharNum in range(len(AcDialCharNet)):
+                AcDialCharNet[CharNum] = AcDialCharNet[CharNum].split('  ')
+                
+            AcDialCharNet.pop()
+            #print(Scene)
+            AcDialCharNet = numpy.array(AcDialCharNet)
+            AcDialCharNetStream.insert(Scene-1, AcDialCharNet)
+            
+            ######################################################
+            DisDialCharNet = CharNetSet.findtext("discreteDialCharNet")
+            DisDialCharNet = DisDialCharNet.split('  //')
+            for CharNum in range(len(DisDialCharNet)):
+                DisDialCharNet[CharNum] = DisDialCharNet[CharNum].split('  ')
+                
+            DisDialCharNet.pop()
+            #print(Scene)
+            DisDialCharNet = numpy.array(DisDialCharNet)
+            DisDialCharNetStream.insert(Scene-1, DisDialCharNet)
+
+
+
+            ######################################################
+            BiAcCharNet = CharNetSet.findtext("accumulativeCharNet")
+            BiAcCharNet = BiAcCharNet.split('  //')
+            for CharNum in range(len(BiAcCharNet)):
+                BiAcCharNet[CharNum] = BiAcCharNet[CharNum].split('  ')
+                
+            BiAcCharNet.pop()
+            #print(Scene)
+            BiAcCharNet = numpy.array(BiAcCharNet)
+            BiAcCharNetStream.insert(Scene-1, BiAcCharNet)
+            
+            ######################################################
+            BiDisCharNet = CharNetSet.findtext("discreteCharNet")
+            BiDisCharNet = BiDisCharNet.split('  //')
+            for CharNum in range(len(BiDisCharNet)):
+                BiDisCharNet[CharNum] = BiDisCharNet[CharNum].split('  ')
+                
+            BiDisCharNet.pop()
+            #print(Scene)
+            BiDisCharNet = numpy.array(BiDisCharNet)
+            BiDisCharNetStream.insert(Scene-1, BiDisCharNet)
+            
+
+            ######################################################
+            BiAcDialCharNet = CharNetSet.findtext("accumulativeDialCharNet")
+            BiAcDialCharNet = BiAcDialCharNet.split('  //')
+            for CharNum in range(len(BiAcDialCharNet)):
+                BiAcDialCharNet[CharNum] = BiAcDialCharNet[CharNum].split('  ')
+                
+            BiAcDialCharNet.pop()
+            #print(Scene)
+            BiAcDialCharNet = numpy.array(BiAcDialCharNet)
+            BiAcDialCharNetStream.insert(Scene-1, BiAcDialCharNet)
+            
+            ######################################################
+            BiDisDialCharNet = CharNetSet.findtext("discreteDialCharNet")
+            BiDisDialCharNet = BiDisDialCharNet.split('  //')
+            for CharNum in range(len(BiDisDialCharNet)):
+                BiDisDialCharNet[CharNum] = BiDisDialCharNet[CharNum].split('  ')
+                
+            BiDisDialCharNet.pop()
+            #print(Scene)
+            BiDisDialCharNet = numpy.array(BiDisDialCharNet)
+            BiDisDialCharNetStream.insert(Scene-1, BiDisDialCharNet)
+
+
+
+
+        ######################################################
+        AcCharNetStream.pop()
+        DisCharNetStream.pop()
+        AcDialCharNetStream.pop()
+        DisDialCharNetStream.pop()
+
+        BiAcCharNetStream.pop()
+        BiDisCharNetStream.pop()
+        BiAcDialCharNetStream.pop()
+        BiDisDialCharNetStream.pop()
+    
         #print(CharNetStream[662])
-        
-        LastScene = CharNetStream[len(CharNetStream)-1]
-        NumOfScenes = len(CharNetStream)
-        NumOfChar = int(math.sqrt(CharNetStream[len(CharNetStream)-1].size))
+        LastScene = AcCharNetStream[len(AcCharNetStream)-1]
+        NumOfScenes = len(AcCharNetStream)
+        NumOfChar = int(math.sqrt(AcCharNetStream[len(AcCharNetStream)-1].size))
+
+        CharNetStreams = []
+        CharNetStreams.append(AcCharNetStream)
+        CharNetStreams.append(DisCharNetStream)
+        CharNetStreams.append(AcDialCharNetStream)
+        CharNetStreams.append(DisDialCharNetStream)
+        CharNetStreams.append(BiAcCharNetStream)
+        CharNetStreams.append(BiDisCharNetStream)
+        CharNetStreams.append(BiAcDialCharNetStream)
+        CharNetStreams.append(BiDisDialCharNetStream)
+
+        return CharNetStreams, LastScene, NumOfScenes, NumOfChar
     
-        return CharNetStream, LastScene, NumOfScenes, NumOfChar
     
-    
-    def CharNet2Graph(self,CharNetStream, NumOfScenes, NumOfChar):
+    def CharNet2Graph(self,CharNetStreams, NumOfScenes, NumOfChar):
         
         #CharNetGraphs = []
         #print(NumOfScenes)
         #print(len(CharNetStream))
         #print(CharNetStream[NumOfScenes-2])
+
+        print(NumOfChar)
+        print(len(self.CharNames))
+        print(self.CharNames)
         
+        AcCharNetStream = CharNetStreams[0]
+
         for i in range(NumOfScenes):
-            CharNetGraph = nx.DiGraph()
+            AcCharNetGraph = nx.DiGraph()
             
             for j in range(NumOfChar):
-                if float(CharNetStream[i].item(j,j)) != 0:
-                    CharNetGraph.add_node('c'+ str(j))
+                if not j in self.errorChars:
+                    if float(CharNetStreams[4][i].item(j,j)) != 0:
+                        #AcCharNetGraph.add_node('c'+ str(j)) self.CharNames
+                        AcCharNetGraph.add_node(self.CharNames[j])
                 
             for j in range(NumOfChar):
                 for k in range(NumOfChar):
-                    if float(CharNetStream[i].item(j,k)) != 0:
-                        #print(CharNetStream[i].item(j,k))
-                        CharNetGraph.add_edge('c'+ str(j), 'c'+ str(k), weight=float(CharNetStream[i].item(j,k)))
+                    if (not j in self.errorChars) and (not k in self.errorChars):
+                        if float(AcCharNetStream[i].item(j,k)) != 0:
+                            #print(CharNetStream[i].item(j,k))
+                            #AcCharNetGraph.add_edge('c'+ str(j), 'c'+ str(k), weight=float(AcCharNetStream[i].item(j,k)))
+                            AcCharNetGraph.add_edge(self.CharNames[j], self.CharNames[k], weight=float(AcCharNetStream[i].item(j,k)))
             
-            self.CharNetGraphs.insert(i, CharNetGraph)
+            self.AcCharNetGraphs.insert(i, AcCharNetGraph)
             
             if i == NumOfScenes-1:
-                centrality = centralities_as_dict(CharNetGraph)
+                centrality = centralities_as_dict(AcCharNetGraph)
                 #print(centrality)
                 for j in range(NumOfChar):
-                    self.centrality['c'+ str(j)] = (centrality['weighted_deg']['c'+ str(j)] + centrality['closeness_cent']['c'+ str(j)] + centrality['betweeness_cent']['c'+ str(j)])
+                    if not j in self.errorChars:
+                        if float(CharNetStreams[4][i].item(j,j)) != 0:
+                            #self.centrality['c'+ str(j)] = (centrality['weighted_deg']['c'+ str(j)] + centrality['closeness_cent']['c'+ str(j)] + centrality['betweeness_cent']['c'+ str(j)])
+                            self.centrality[self.CharNames[j]] = (centrality['weighted_deg'][self.CharNames[j]] + centrality['closeness_cent'][self.CharNames[j]] + centrality['betweeness_cent'][self.CharNames[j]])
 
-        nx.draw(self.CharNetGraphs[len(self.CharNetGraphs)-1])
+        nx.draw(self.AcCharNetGraphs[len(self.AcCharNetGraphs)-1])
         plt.show()
+        nx.write_graphml(self.AcCharNetGraphs[len(self.AcCharNetGraphs)-1], "C:/Users/OJ/Documents/XML/GOOD WILL HUNTING_sample_AcCharNet_Last.graphml")
 
         return #CharNetGraphs
 
@@ -181,12 +310,12 @@ class CharNetReader:
         
         
         for i in range(self.NumOfScenes):
-            proximity = {n:0 for n in self.CharNetGraphs[i].edges()}
+            proximity = {n:0 for n in self.AcCharNetGraphs[i].edges()}
             BoundaryHigh = 0
             BoundaryMedium = 0
             
             #print(proximity)
-            for speaker, listener, freq in self.CharNetGraphs[i].edges(data=True):
+            for speaker, listener, freq in self.AcCharNetGraphs[i].edges(data=True):
                 if speaker != listener:
                     proximity[(speaker, listener)] = freq['weight']
                  
@@ -211,13 +340,13 @@ class CharNetReader:
             #print(sortedGap)
             #print(BoundaryHigh, BoundaryMedium)
             
-            for speaker, listener, freq in self.CharNetGraphs[i].edges(data=True):
+            for speaker, listener, freq in self.AcCharNetGraphs[i].edges(data=True):
                 if freq['weight'] >= BoundaryHigh:
-                    self.CharNetGraphs[i][speaker][listener]['weight'] = 'H'
+                    self.AcCharNetGraphs[i][speaker][listener]['weight'] = 'H'
                 elif freq['weight'] >= BoundaryMedium:
-                    self.CharNetGraphs[i][speaker][listener]['weight'] = 'I'
+                    self.AcCharNetGraphs[i][speaker][listener]['weight'] = 'I'
                 else:
-                    self.CharNetGraphs[i][speaker][listener]['weight'] = 'L'
+                    self.AcCharNetGraphs[i][speaker][listener]['weight'] = 'L'
             
             #print('Scene:', i)
             #print(self.CharNetGraphs[i].edges(data=True))
