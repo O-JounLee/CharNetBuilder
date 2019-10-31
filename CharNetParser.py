@@ -376,7 +376,7 @@ class ScriptParser:
                     SumNumDial = 0
                     SumNumWords = 0
                     for j in range(CharNum): 
-                        if not i == j:
+                        if i != j:
                             BiCurCharNet[i,j] = CharNets[l][i,j] + CharNets[l][j,i]
                             BiCurDialCharNet[i,j] = DialCharNets[l][i,j] + DialCharNets[l][j,i]
 
@@ -385,8 +385,8 @@ class ScriptParser:
                         #else:
                             #BiCurCharNet[i,j] = CharNets[l][i,j]
                             #BiCurDialCharNet[i,j] = DialCharNets[l][i,j]
-                    BiCurCharNet[i,i] = SumNumDial
-                    BiCurDialCharNet[i,i] = SumNumWords
+                    BiCurCharNet[i,i] = SumNumDial + CharNets[l][i,i]
+                    BiCurDialCharNet[i,i] = SumNumWords + DialCharNets[l][i,i]
 
                 BiCharNet = BiCharNet + BiCurCharNet
                 BiDialCharNet = BiDialCharNet + BiCurDialCharNet
