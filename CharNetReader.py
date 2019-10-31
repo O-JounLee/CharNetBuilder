@@ -285,6 +285,7 @@ class CharNetReader:
         DisCharNetStr = self.CharNetStr[1]
         DisDialCharNetStr = self.CharNetStr[3]
         BiDisCharNetStr = self.CharNetStr[5]
+        BiDisDialCharNetStr = self.CharNetStr[7]
 
         #importance
         Importance = []
@@ -293,9 +294,9 @@ class CharNetReader:
             ImportanceInScene = []
             MaxFreq = 0
             for j in range(self.NumOfChar):
-                ImportanceInScene.append(int(DisCharNetStr[i].item(j,j)))
-                if MaxFreq < int(DisCharNetStr[i].item(j,j)): 
-                    MaxFreq = int(DisCharNetStr[i].item(j,j))
+                ImportanceInScene.append(int(DisDialCharNetStr[i].item(j,j)))
+                if MaxFreq < int(DisDialCharNetStr[i].item(j,j)): 
+                    MaxFreq = int(DisDialCharNetStr[i].item(j,j))
             for j in range(self.NumOfChar):
                 if MaxFreq != 0:
                     ImportanceInScene[j] = ImportanceInScene[j]/MaxFreq
@@ -344,7 +345,7 @@ class CharNetReader:
             MaxFreq = 0
             for j in range(self.NumOfChar):
                 if float(BiDisCharNetStr[i].item(j,j)) != 0:
-                    RatioInScene.append(float(DisCharNetStr[i].item(j,j))/float(BiDisCharNetStr[i].item(j,j)))
+                    RatioInScene.append(float(DisDialCharNetStr[i].item(j,j))/float(BiDisDialCharNetStr[i].item(j,j)))
                 else:
                     RatioInScene.append(0)
             Ratios.append(RatioInScene)
@@ -355,7 +356,7 @@ class CharNetReader:
             logRsum = 0
             numChar = 0
             for j in range(self.NumOfChar):
-                if float(BiDisCharNetStr[i].item(j,j)) != 0:
+                if float(DisDialCharNetStr[i].item(j,j)) != 0:
                     logRsum -= math.log(Ratios[i][j])
                     numChar += 1
             if numChar != 0:
